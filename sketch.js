@@ -1,4 +1,4 @@
-var e, w, g, b, c, r, bi, fi, ri, bunny, btn, blink, eat, sad 
+var e, w, g, b, c, r, bi, fi, ri, bunny, btn, blink, eat, sad, bgs, ss, cs, es, air, bln, m, btn2, btn3, r2, r3, wi, he
 
 const Engine = Matter.Engine;
 const Render = Matter.Render;
@@ -18,10 +18,24 @@ eat = loadAnimation ("./assets/eat_0.png", "./assets/eat_1.png", "./assets/eat_2
 sad = loadAnimation ("./assets/sad_1.png", "./assets/sad_2.png", "./assets/sad_3.png")
 eat.looping = false
 sad.looping = false
+bgs = loadSound ("./assets/sound1.mp3")
+cs = loadSound ("./assets/rope_cut.mp3")
+ss = loadSound ("./assets/sad.wav")
+es = loadSound ("./assets/eating_sound.mp3")
+air = loadSound ("./assets/air.wav")
 }
 
 function setup() {
- createCanvas(1000,1000);
+var flag = /iPhone|iPad|iPod|Android|Chrome/i.test (navigator.userAgent)
+if (flag) {
+wi = displayWidth
+he = displayHeight
+createCanvas(displayWidth, displayHeight);
+} else {
+  wi = windowWidth
+  he = windowHeight
+  createCanvas(windowWidth, windowHeight)
+}
  e = Matter.Engine.create()
  w = e.world
  g = Matter.Bodies.rectangle(width / 2, height - 10, width, 20, {isStatic: true})
@@ -34,11 +48,15 @@ function setup() {
 // c = Matter.Constraint.create({pointA:{x: 100, y: 100}, 
 // bodyB: b, length: 100, stiffness: 0.02})
 // Matter.World.add(w, c)
-r = new Rope (8, {x:width / 2, y:100})
+r = new Rope (8, {x:500, y:100})
+r2= new Rope (12, {x:50, y:80})
+r3 = new Rope (8, {x:550, y:450})
 Matter.Composite.add(r.body, b)
 c = new Link (r, b)
+c2 = new Link (r2, b)
+c3 = new Link (r3, b)
 blink.frameDelay = 10
-bunny = createSprite (width / 2, height - 150, 50, 50)
+bunny = createSprite (500, height - 150, 50, 50)
 // bunny.addImage (ri)
 bunny.addAnimation ("blink", blink)
 bunny.addAnimation ("eat", eat)
@@ -46,10 +64,32 @@ bunny.addAnimation ("sad", sad)
 
 bunny.scale = 0.35
 btn = createImg ("./assets/cut_btn.png")
-btn.position (430, 80)
+btn.position (500, 80)
 btn.size (100, 100) 
 btn.mouseClicked (cut)
-  
+
+bln = createImg ("./assets/balloon.png")
+bln.position (50, height / 2)
+bln.size (150, 100) 
+bln.mouseClicked (blowair)
+
+btn2 = createImg ("./assets/cut_btn.png")
+btn2.position (50, 80)
+btn2.size (100, 100) 
+btn2.mouseClicked (cut2)
+
+btn3 = createImg ("./assets/cut_btn.png")
+btn3.position (550, 450)
+btn3.size (100, 100) 
+btn3.mouseClicked (cut3)
+
+// bgs.play ()
+// bgs.setVolume (0.5)
+
+m = createImg ("./assets/mute.png")
+m.position (width - 50, 50)
+m.size (50, 50) 
+m.mouseClicked (mute)
 }
 
 function draw() 
@@ -62,13 +102,18 @@ function draw()
   image (fi, b.position.x, b.position.y, 100, 100)
   // line(c.pointA.x, c.pointA.y, b.position.x, b.position.y) 
   r.show()
+  r2.show()
+  r3.show()
 if (collide (b, bunny)) {
 bunny.changeAnimation ("eat")
 console.log ("eat")
+es.play ()
 }
-if (collide (b, g)) {
+if ( b != null && b.position.y > bunny.y ) {
 bunny.changeAnimation ("sad")
+ss.play ()
 console.log ("sad")
+setInterval (()=>{ss.stop ();b = null}, 2000)
 }
 
   drawSprites()
@@ -80,14 +125,24 @@ function cut () {
  r.break ()
  c.cut ()
  c = null 
-
+cs.play ()
 } 
-
-
+function cut2 () {
+  r2.break ()
+  c2.cut ()
+  c2 = null 
+ cs.play ()
+}
+function cut3 () {
+  r3.break ()
+  c3.cut ()
+  c3 = null 
+ cs.play ()
+}
 function collide (b1, s) {
   if (b1 != null) {
       var d = dist (b1.position.x, b1.position.y, s.position.x, s.position.y)
-      if (d <= 50) {
+      if (d <= 120) {
         // console.log (91, d, b1)
         Matter.World.remove (w, b)
         b = null
@@ -101,5 +156,14 @@ function collide (b1, s) {
 
 }
 
+function blowair () {
+  Matter.Body.applyForce (b, b.position, {x:0.3, y:0})
+  air.play ()
+}
 
-
+function mute () {
+  if (bgs.isPlaying()) {
+    bgs.stop ()
+  }
+  else {bgs.play ()}
+}
